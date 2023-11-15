@@ -1,0 +1,143 @@
+# Metaprogramming examples
+
+## Description
+
+The idea is to documentate examples of good usage of metaprogramming with Elixir for future reference and learning.
+
+### Run local DB with Docker.
+
+```
+docker run --rm -it -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:13.2
+```
+
+## General Setup
+
+### Installing Dependencies and configuring the App
+
+Installing dependencies and configuring the DB running on the container to work with our app and Kino.
+
+```elixir
+Mix.install([
+  {:ecto, "~> 3.10"},
+  {:ecto_sql, "~> 3.10"},
+  {:postgrex, "~> 0.17.3"},
+  {:kino, "~> 0.11.0"},
+  {:kino_db, "~> 0.2.4"},
+  {:timex, "~> 3.0"}
+])
+```
+
+```elixir
+defmodule Repo do
+  use Ecto.Repo, otp_app: :my_app, adapter: Ecto.Adapters.Postgres
+end
+```
+
+```elixir
+Kino.start_child({Repo, url: "postgres://postgres:postgres@localhost/postgres"})
+```
+
+### Creating tables
+
+```elixir
+defmodule Migrations.AddWeatherTable do
+  use Ecto.Migration
+
+  def up do
+    # Drop the table if it already exists
+    drop_if_exists(table("weather"))
+
+    # Create the table
+    create table("weather") do
+      add(:city, :string, size: 40)
+      add(:temp_lo, :integer)
+      add(:temp_hi, :integer)
+      add(:prcp, :float)
+      add(:last_rain_at, :utc_datetime_usec)
+
+      timestamps()
+    end
+  end
+
+  def down do
+    drop(table("weather"))
+  end
+end
+```
+
+```elixir
+Ecto.Migrator.down(Repo, 1, Migrations.AddWeatherTable)
+Ecto.Migrator.up(Repo, 1, Migrations.AddWeatherTable)
+```
+
+### Populating Tables
+
+```elixir
+defmodule Weather do
+  use Ecto.Schema
+
+  schema "weather" do
+    field(:city, :string)
+    field(:temp_lo, :integer)
+    field(:temp_hi, :integer)
+    field(:prcp, :float, default: 0.0)
+    field(:last_rain_at, :utc_datetime_usec)
+
+    timestamps()
+  end
+end
+```
+
+```elixir
+use Timex
+
+today = Timex.now()
+two_days_ago = today |> Timex.shift(days: -2)
+
+Repo.delete_all(Weather)
+
+%Weather{temp_lo: 0, temp_hi: 23} |> Repo.insert!()
+%Weather{temp_lo: 0, temp_hi: 23, last_rain_at: today} |> Repo.insert!()
+%Weather{temp_lo: 0, temp_hi: 23, last_rain_at: two_days_ago} |> Repo.insert!()
+```
+
+### Showing current DB state for reference
+
+```elixir
+Weather |> Repo.all() |> Kino.DataTable.new()
+```
+
+## Macros
+
+```elixir
+defmodule Transactions do
+  import Ecto.Query
+
+  defmacro coalesce_now(binding) do
+    quote do
+      coalesce(unquote(binding), fragment("TIMEZONE('utc', NOW())"))
+    end
+  end
+
+  # def coalesce_now(binding) do
+  # coalesce(binding, fragment("TIMEZONE('utc', NOW())"))
+  # end
+
+  def filter_by_last_rain(query, date) do
+    where(query, [w], coalesce_now(w.last_rain_at) >= ^date)
+  end
+end
+```
+
+```elixir
+import Ecto.Query
+use Timex
+
+yesterday = Timex.now() |> Timex.shift(days: -1)
+
+q = from(w in Weather) |> Transactions.filter_by_last_rain(yesterday)
+```
+
+```elixir
+q |> Repo.all() |> Kino.DataTable.new()
+```
