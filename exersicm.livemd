@@ -1,0 +1,898 @@
+# Elixir Exersices from Exercism
+
+## Freelancer Rates
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/freelancer-rates)
+
+### Solutions
+
+```elixir
+defmodule FreelancerRates do
+  def daily_rate(hourly_rate), do: hourly_rate * 8
+
+  def apply_discount(total_rate, discount) do
+    total_rate - percentage(total_rate, discount)
+  end
+
+  def monthly_rate(hourly_rate, discount) do
+    daily_rate(hourly_rate)
+    |> Kernel.*(22)
+    |> apply_discount(discount)
+    |> Float.ceil()
+    |> trunc()
+  end
+
+  def days_in_budget(budget, hourly_rate, discount) do
+    daily_rate =
+      hourly_rate
+      |> daily_rate()
+      |> apply_discount(discount)
+
+    Float.floor(budget / daily_rate, 1)
+  end
+
+  defp percentage(total_rate, discount), do: total_rate * discount / 100
+end
+```
+
+```elixir
+IO.inspect(FreelancerRates.daily_rate(60))
+IO.inspect(FreelancerRates.apply_discount(150, 10))
+IO.inspect(FreelancerRates.monthly_rate(77, 10.5))
+IO.inspect(FreelancerRates.days_in_budget(20000, 80, 11.0))
+```
+
+## Language List
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/language-list)
+
+### Solutions
+
+```elixir
+defmodule LanguageList do
+  def new(), do: []
+
+  def add(language_list, language) do
+    [language | language_list]
+  end
+
+  def remove([_head | tail]), do: tail
+
+  def first([head | _tail]), do: head
+
+  def count(language_list), do: length(language_list)
+
+  def function_list?(language_list), do: "Elixir" in language_list
+end
+```
+
+```elixir
+LanguageList.new()
+|> LanguageList.add("Erlang")
+|> LanguageList.add("Elixir")
+|> LanguageList.add("Clojure")
+|> LanguageList.remove()
+# |> LanguageList.first()
+# |> LanguageList.count()
+|> LanguageList.function_list?()
+```
+
+## Secrets
+
+[Description link](https://exercism.org/tracks/elixir/exercises/secrets)
+
+### Solutions
+
+```elixir
+defmodule Secrets do
+  import Bitwise
+
+  def secret_add(arg1), do: &(&1 + arg1)
+
+  def secret_substract(arg1), do: &(&1 - arg1)
+
+  def secret_multiply(arg1), do: &(&1 * arg1)
+
+  def secret_divide(arg1), do: &div(&1, arg1)
+
+  def secret_and(arg1), do: &(&1 &&& arg1)
+
+  def secret_xor(arg1), do: &bxor(&1, arg1)
+
+  def secret_combine(fun1, fun2) do
+    fn arg ->
+      arg
+      |> fun1.()
+      |> fun2.()
+    end
+  end
+end
+```
+
+```elixir
+adder = Secrets.secret_add(2)
+adder.(2)
+
+subtractor = Secrets.secret_substract(2)
+subtractor.(3)
+
+multiplier = Secrets.secret_multiply(7)
+multiplier.(3)
+
+divider = Secrets.secret_divide(3)
+divider.(32)
+
+ander = Secrets.secret_and(1)
+ander.(2)
+
+xorer = Secrets.secret_xor(1)
+xorer.(3)
+
+combined = Secrets.secret_combine(multiplier, divider)
+combined.(6)
+```
+
+## Log Level
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/log-level)
+
+### Solutions
+
+```elixir
+defmodule LogLevel do
+  @log_codes %{
+    0 => %{:log_label => :trace, :legacy_supported? => false},
+    1 => %{:log_label => :debug, :legacy_supported? => true},
+    2 => %{:log_label => :info, :legacy_supported? => true},
+    3 => %{:log_label => :warning, :legacy_supported? => true},
+    4 => %{:log_label => :error, :legacy_supported? => true},
+    5 => %{:log_label => :fatal, :legacy_supported? => false}
+  }
+
+  def to_label(code, is_legacy?) do
+    legacy_supported? = get_in(@log_codes, [code, :legacy_supported?])
+
+    cond do
+      legacy_supported? -> @log_codes[code].log_label
+      legacy_supported? == false and !is_legacy? -> @log_codes[code].log_label
+      true -> :unknown
+    end
+  end
+
+  def alert_recipient(code, is_legacy?) do
+    cond do
+      to_label(code, is_legacy?) in [:error, :fatal] -> :ops
+      is_legacy? == true and to_label(code, is_legacy?) == :unknown -> :dev1
+      to_label(code, is_legacy?) == :unknown -> :dev2
+      true -> false
+    end
+  end
+end
+```
+
+```elixir
+LogLevel.to_label(0, false)
+LogLevel.alert_recipient(-1, true)
+LogLevel.alert_recipient(0, false)
+```
+
+## Guessing Game
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/guessing-game)
+
+### Solution
+
+```elixir
+defmodule GuessingGame do
+  def compare(secret_number, guess \\ :no_guess)
+
+  def compare(_secret_number, :no_guess), do: "Make a guess"
+
+  def compare(secret_number, secret_number), do: "Correct"
+
+  def compare(secret_number, guess) when secret_number in [guess + 1, guess - 1], do: "So close"
+
+  def compare(secret_number, guess) when guess > secret_number, do: "Too high"
+
+  def compare(secret_number, guess) when guess < secret_number, do: "Too low"
+end
+```
+
+```elixir
+GuessingGame.compare(5, 5) |> IO.inspect()
+GuessingGame.compare(5, 8) |> IO.inspect()
+GuessingGame.compare(5, 2) |> IO.inspect()
+GuessingGame.compare(5, 6) |> IO.inspect()
+GuessingGame.compare(5) |> IO.inspect()
+GuessingGame.compare(5, :no_guess) |> IO.inspect()
+```
+
+## Kitchen Calculator
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/kitchen-calculator)
+
+### Solution
+
+```elixir
+defmodule KitchenCalculator do
+  def get_volume({_unit, volume}), do: volume
+
+  def to_milliliter({:cup, volume}), do: {:milliliter, volume * 240}
+  def to_milliliter({:fluid_ounce, volume}), do: {:milliliter, volume * 30}
+  def to_milliliter({:teaspoon, volume}), do: {:milliliter, volume * 5}
+  def to_milliliter({:tablespoon, volume}), do: {:milliliter, volume * 15}
+  def to_milliliter({:milliliter, volume}), do: {:milliliter, volume}
+
+  def from_milliliter({:milliliter, volume}, :cup), do: {:cup, volume / 240}
+  def from_milliliter({:milliliter, volume}, :fluid_ounce), do: {:fluid_ounce, volume / 30}
+  def from_milliliter({:milliliter, volume}, :teaspoon), do: {:teaspoon, volume / 5}
+  def from_milliliter({:milliliter, volume}, :tablespoon), do: {:tablespoon, volume / 15}
+  def from_milliliter({:milliliter, volume}, :milliliter), do: {:milliliter, volume}
+
+  def convert(volume_tuple, target_unit) do
+    volume_tuple
+    |> to_milliliter()
+    |> from_milliliter(target_unit)
+  end
+end
+```
+
+```elixir
+KitchenCalculator.get_volume({:cup, 2.0}) |> IO.inspect()
+KitchenCalculator.to_milliliter({:cup, 2.5}) |> IO.inspect()
+KitchenCalculator.from_milliliter({:milliliter, 1320.0}, :cup) |> IO.inspect()
+KitchenCalculator.convert({:teaspoon, 9.0}, :tablespoon)
+```
+
+## High School Sweetheart
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/high-school-sweetheart)
+
+### Solution
+
+```elixir
+defmodule HighSchoolSweetheart do
+  def first_letter(name) do
+    name
+    |> String.trim()
+    |> String.first()
+  end
+
+  def initial(name) do
+    name
+    |> first_letter()
+    |> String.upcase()
+    |> Kernel.<>(".")
+  end
+
+  def initials(full_name) do
+    full_name
+    |> String.split()
+    |> Enum.map(&initial(&1))
+    |> Enum.join(" ")
+  end
+
+  def pair(full_name1, full_name2) do
+    """
+          ******       ******
+        **      **   **      **
+      **         ** **         **
+      **           *            **
+      **                         **
+      **     #{initials(full_name1)}  +  #{initials(full_name2)}     **
+      **                       **
+        **                   **
+          **               **
+            **           **
+              **       **
+                **   **
+                  ***
+                   *
+    """
+  end
+end
+```
+
+```elixir
+HighSchoolSweetheart.first_letter("Jane")
+HighSchoolSweetheart.initial("robert")
+HighSchoolSweetheart.initials("Lance Green")
+HighSchoolSweetheart.pair("Blake Miller", "Riley Lewis") |> IO.inspect()
+```
+
+## Bird Count
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/bird-count)
+
+### Solution
+
+```elixir
+# 15.43
+defmodule BirdCount do
+  def today([]), do: nil
+  def today([today | _]), do: today
+
+  def increment_day_count([]), do: [1]
+  def increment_day_count([today | tail]), do: [today + 1 | tail]
+
+  def has_day_without_birds?([]), do: false
+  def has_day_without_birds?([0 | _tail]), do: true
+  def has_day_without_birds?([_ | tail]), do: has_day_without_birds?(tail)
+
+  def total([]), do: 0
+  def total([total]), do: total
+  def total([total, daily_count | tail]), do: total([total + daily_count | tail])
+
+  def busy_days(daily_counts), do: busy_days(daily_counts, 0)
+
+  def busy_days([], busy_days), do: busy_days
+
+  def busy_days([daily_count | tail], busy_days) when daily_count >= 5,
+    do: busy_days(tail, busy_days + 1)
+
+  def busy_days([_daily_count | tail], busy_days), do: busy_days(tail, busy_days)
+end
+```
+
+```elixir
+BirdCount.today([2, 5, 1]) |> IO.inspect()
+BirdCount.increment_day_count([4, 0, 2]) |> IO.inspect()
+BirdCount.has_day_without_birds?([2, 0, 4]) |> IO.inspect()
+BirdCount.has_day_without_birds?([3, 8, 1, 5]) |> IO.inspect()
+BirdCount.total([4, 0, 9, 0, 5]) |> IO.inspect()
+BirdCount.busy_days([4, 5, 0, 0, 6]) |> IO.inspect()
+```
+
+## High Score
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/high-score)
+
+### Solution
+
+```elixir
+defmodule HighScore do
+  @base_score 0
+
+  def new(), do: %{}
+
+  def add_player(scores, player_name, score \\ @base_score),
+    do: Map.put(scores, player_name, score)
+
+  def remove_player(scores, player_name), do: Map.delete(scores, player_name)
+
+  def reset_score(scores, player_name), do: Map.put(scores, player_name, @base_score)
+
+  def update_score(scores, player_name, score),
+    do: Map.update(scores, player_name, score, &(&1 + score))
+
+  def get_players(scores), do: Map.keys(scores)
+end
+```
+
+```elixir
+HighScore.new()
+|> HighScore.add_player("José Valim", 486_373)
+|> HighScore.add_player("Euen")
+|> HighScore.update_score("José Valim", 7)
+|> HighScore.reset_score("José Valim")
+|> HighScore.reset_score("Ann")
+|> HighScore.update_score("Andrea", 459)
+|> HighScore.get_players()
+|> dbg()
+```
+
+## City Office
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/city-office)
+
+### Solution
+
+```elixir
+defmodule Form do
+  @moduledoc """
+  A collection of loosely related functions helpful for filling out various forms at the city office.
+  """
+
+  @doc """
+  Generates a string of a given length.
+
+  This string can be used to fill out a form field that is supposed to have no value.
+  Such fields cannot be left empty because a malicious third party could fill them out with false data.
+  """
+
+  @type address_map :: %{:street => String.t(), :postal_code => String.t(), :city => String.t()}
+
+  @type address_tuple :: {street :: String.t(), postal_code :: String.t(), city :: String.t()}
+
+  @type address :: address_map() | address_tuple()
+
+  @spec blanks(non_neg_integer()) :: String.t()
+  def blanks(n) do
+    String.duplicate("X", n)
+  end
+
+  @doc """
+  Splits the string into a list of uppercase letters.
+
+  This is needed for form fields that don't offer a single input for the whole string,
+  but instead require splitting the string into a predefined number of single-letter inputs.
+  """
+  @spec letters(String.t()) :: [String.t()]
+  def letters(word) do
+    word
+    |> String.upcase()
+    |> String.split("", trim: true)
+  end
+
+  @doc """
+  Checks if the value has no more than the maximum allowed number of letters.
+
+  This is needed to check that the values of fields do not exceed the maximum allowed length.
+  It also tells you by how much the value exceeds the maximum.
+  """
+  @spec check_length(String.t(), non_neg_integer()) :: :ok | {:error, pos_integer()}
+  def check_length(word, length) do
+    diff = String.length(word) - length
+
+    if diff <= 0 do
+      :ok
+    else
+      {:error, diff}
+    end
+  end
+
+  @doc """
+  Formats the address as an uppercase multiline string.
+  """
+  @spec format_address(address()) :: String.t()
+  def format_address(%{street: street, postal_code: postal_code, city: city}) do
+    format_address({street, postal_code, city})
+  end
+
+  def format_address({street, postal_code, city}) do
+    """
+    #{String.upcase(street)}
+    #{String.upcase(postal_code)} #{String.upcase(city)}
+    """
+  end
+end
+```
+
+## German Sysadmin
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/german-sysadmin)
+
+### Solution
+
+```elixir
+defmodule Username do
+  def sanitize(username), do: sanitize(username, [])
+
+  defp sanitize(username, sanitized) do
+    case username do
+      [] ->
+        sanitized
+
+      [?ä | rest] ->
+        sanitize(rest, sanitized ++ ~c"ae")
+
+      [?ö | rest] ->
+        sanitize(rest, sanitized ++ ~c"oe")
+
+      [?ü | rest] ->
+        sanitize(rest, sanitized ++ ~c"ue")
+
+      [?ß | rest] ->
+        sanitize(rest, sanitized ++ ~c"ss")
+
+      [?_ | rest] ->
+        sanitize(rest, sanitized ++ ~c"_")
+
+      [letter | rest] when letter in ?a..?z ->
+        sanitize(rest, sanitized ++ [letter])
+
+      [_letter | rest] ->
+        sanitize(rest, sanitized)
+    end
+  end
+end
+```
+
+```elixir
+Username.sanitize(~c"schmidt1985")
+Username.sanitize(~c"mark_fischer$$$")
+Username.sanitize(~c"cäcilie_weiß")
+```
+
+## RPG Character Sheet
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/rpg-character-sheet)
+
+### Solution
+
+```elixir
+defmodule RPG.CharacterSheet do
+  def welcome() do
+    IO.puts("Welcome! Let's fill out your character sheet together.")
+  end
+
+  def ask_name() do
+    IO.gets("What is your character's name?\n") |> String.trim()
+  end
+
+  def ask_class() do
+    IO.gets("What is your character's class?\n")
+  end
+
+  def ask_level() do
+    IO.gets("What is your character's level?\n")
+  end
+
+  def run() do
+    welcome()
+    name = ask_name()
+    class = ask_class()
+    level = ask_level()
+    character_sheet = %{class: class, level: level, name: name}
+    IO.inspect(character_sheet, label: "Your character")
+  end
+end
+```
+
+```elixir
+# RPG.CharacterSheet.welcome()
+# RPG.CharacterSheet.ask_name()
+String.trim("33\n") |> String.to_integer()
+```
+
+## Names Badge
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/name-badge)
+
+### Solution
+
+```elixir
+defmodule NameBadge do
+  def print(id, name, department) do
+    id = if is_nil(id), do: "", else: "[#{id}] - "
+
+    department =
+      if is_nil(department) do
+        "OWNER"
+      else
+        String.upcase(department)
+      end
+
+    id <> "#{name} - #{department}"
+  end
+end
+```
+
+```elixir
+NameBadge.print(67, "Katherine Williams", "Strategic Communication") |> IO.inspect()
+NameBadge.print(nil, "Robert Johnson", nil) |> IO.inspect()
+```
+
+## Take-A-Number
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/take-a-number)
+
+### Solution
+
+```elixir
+defmodule TakeANumber do
+  # def start(), do: spawn(fn -> loop(0) end)
+  def start(), do: spawn(&loop/0)
+
+  def loop(state \\ 0) do
+    receive do
+      {:report_state, sender_pid} ->
+        send(sender_pid, state)
+        loop(state)
+
+      {:take_a_number, sender_pid} ->
+        new_state = state + 1
+        send(sender_pid, new_state)
+        loop(new_state)
+
+      :stop ->
+        :ok
+
+      _ ->
+        loop(state)
+    end
+  end
+end
+```
+
+```elixir
+TakeANumber.start()
+```
+
+## Wine Cellar
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/wine-cellar)
+
+### Solution
+
+```elixir
+defmodule WineCellar do
+  def explain_colors() do
+    [
+      white: "Fermented without skin contact.",
+      red: "Fermented with skin contact using dark-colored grapes.",
+      rose: "Fermented with some skin contact, but not enough to qualify as a red wine."
+    ]
+  end
+
+  def filter(cellar, color, opts \\ []) do
+    wines = Keyword.get_values(cellar, color)
+
+    wines = if opts[:year], do: filter_by_year(wines, opts[:year]), else: wines
+    if opts[:country], do: filter_by_country(wines, opts[:country]), else: wines
+  end
+
+  # The functions below do not need to be modified.
+
+  defp filter_by_year(wines, year)
+  defp filter_by_year([], _year), do: []
+
+  defp filter_by_year([{_, year, _} = wine | tail], year) do
+    [wine | filter_by_year(tail, year)]
+  end
+
+  defp filter_by_year([{_, _, _} | tail], year) do
+    filter_by_year(tail, year)
+  end
+
+  defp filter_by_country(wines, country)
+  defp filter_by_country([], _country), do: []
+
+  defp filter_by_country([{_, _, country} = wine | tail], country) do
+    [wine | filter_by_country(tail, country)]
+  end
+
+  defp filter_by_country([{_, _, _} | tail], country) do
+    filter_by_country(tail, country)
+  end
+end
+```
+
+```elixir
+WineCellar.filter(
+  [
+    white: {"Chardonnay", 2017, "Italy"},
+    white: {"Pinot grigio", 2017, "Germany"},
+    red: {"Pinot noir", 2016, "France"},
+    rose: {"Dornfelder", 2018, "Germany"}
+  ],
+  :white,
+  country: "Germany"
+)
+```
+
+## Paint by Number
+
+[Link Description](https://exercism.org/tracks/elixir/exercises/paint-by-number)
+
+### Solution
+
+```elixir
+defmodule PaintByNumber do
+  def palette_bit_size(color_count) do
+    calculate_bit_size(color_count, 1)
+  end
+
+  defp calculate_bit_size(color_count, bit_size) do
+    cond do
+      Integer.pow(2, bit_size) >= color_count -> bit_size
+      true -> calculate_bit_size(color_count, bit_size + 1)
+    end
+  end
+
+  def empty_picture() do
+    <<>>
+  end
+
+  def test_picture() do
+    <<0::2, 1::2, 2::2, 3::2>>
+  end
+
+  def prepend_pixel(picture, color_count, pixel_color_index) do
+    bit_size = palette_bit_size(color_count)
+    index = <<pixel_color_index::size(bit_size)>>
+    <<index::bitstring, picture::bitstring>>
+  end
+
+  def get_first_pixel(<<>>, _color_count), do: nil
+
+  def get_first_pixel(picture, color_count) do
+    bit_size = palette_bit_size(color_count)
+    <<first_pixel::size(bit_size), _tail::bitstring>> = picture
+    first_pixel
+  end
+
+  def drop_first_pixel(<<>>, _color_count), do: <<>>
+
+  def drop_first_pixel(picture, color_count) do
+    bit_size = palette_bit_size(color_count)
+    <<_first_pixel::size(bit_size), rest::bitstring>> = picture
+    rest
+  end
+
+  def concat_pictures(picture1, picture2) do
+    <<picture1::bitstring, picture2::bitstring>>
+  end
+end
+```
+
+```elixir
+# PaintByNumber.palette_bit_size(13)
+# PaintByNumber.empty_picture()
+# PaintByNumber.test_picture()
+<<2::size(4)>>
+```
+
+## Dna Encoding
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/dna-encoding)
+
+### Solution
+
+```elixir
+# <<a::1, b::1, c::1, d::1>> = <<4::4>>
+# IO.inspect({a,b,c,d})
+# <<:4>> = 65
+# int
+# <<0b1000::4>>
+# 2*(0*2)
+# <<?C::4>>
+# data = %{?A => [0,0,0,1], ?C => [0,0,1,0], ?G => [0,1,0,0], ?T => [1,0,0,0], 32 => [0,0,0,0]}
+# Map.to_list(data)
+a =
+  [
+    {32, [0, 0, 0, 0]},
+    {65, [0, 0, 0, 1]},
+    {67, [0, 0, 1, 0]},
+    {71, [0, 1, 0, 0]},
+    {84, [1, 0, 0, 0]}
+  ]
+  |> En
+
+# str = [0,0,1,0] |> Enum.join()
+# <<"0b" <> str::2>>
+# [a, b, c| _] = 'AB C'
+# c
+```
+
+```elixir
+defmodule DNA do
+  @dna_encoding_data [
+    {32, [0, 0, 0, 0]},
+    {65, [0, 0, 0, 1]},
+    {67, [0, 0, 1, 0]},
+    {71, [0, 1, 0, 0]},
+    {84, [1, 0, 0, 0]}
+  ]
+
+  def encode_nucleotide(code_point) do
+    binary_code = get(@dna_encoding_data, code_point)
+    do_encode_nucleotide(binary_code, 0)
+  end
+
+  defp get([], _code_point), do: nil
+  defp get([{code_point, value} | tail], code_point), do: value
+  defp get([_ | tail], code_point), do: get(tail, code_point)
+
+  defp do_encode_nucleotide([], _exp), do: 0
+  defp do_encode_nucleotide([0 | tail], exp), do: do_encode_nucleotide(tail, exp + 1)
+  defp do_encode_nucleotide([1 | _tail], exp), do: Integer.pow(2, exp)
+
+  def decode_nucleotide(encoded_code) do
+    do_decode_nucleotide(@dna_encoding_data, encoded_code)
+  end
+
+  defp do_decode_nucleotide([], _encoded_code), do: nil
+
+  defp do_decode_nucleotide([{k, _value} | tail], encoded_code) do
+    case encode_nucleotide(k) do
+      ^encoded_code -> k
+      _ -> do_decode_nucleotide(tail, encoded_code)
+    end
+  end
+
+  def encode(dna) do
+    do_encode(dna, <<>>)
+  end
+
+  defp do_encode([], result), do: result
+
+  defp do_encode([f | t], result),
+    do: do_encode(t, <<result::bitstring, encode_nucleotide(f)::4>>)
+
+  def decode(dna) do
+    do_decode(dna, ~c"")
+  end
+
+  defp do_decode(<<>>, result), do: result
+
+  defp do_decode(<<f::4, t::bitstring>>, result),
+    do: do_decode(t, result ++ [decode_nucleotide(f)])
+end
+```
+
+```elixir
+# DNA.encode_nucleotide(?T)
+DNA.decode_nucleotide(0b0001)
+# <<a::4, b::4, c::4, d::4, e::4>> = DNA.encode('AC GT')
+# DNA.decode(<<132, 2, 1::size(4)>>)
+```
+
+## Library Fees
+
+[Description Link](https://exercism.org/tracks/elixir/exercises/library-fees)
+
+### Solution
+
+```elixir
+defmodule LibraryFees do
+  @days_before_limit 28
+  @days_after_limit 29
+  @limit_time ~T[12:00:00]
+
+  def datetime_from_string(string) do
+    NaiveDateTime.from_iso8601!(string)
+  end
+
+  def before_noon?(datetime) do
+    noon = @limit_time
+    time = NaiveDateTime.to_time(datetime)
+    Time.compare(time, noon) == :lt
+  end
+
+  def return_date(checkout_datetime) do
+    checkout_datetime
+    |> NaiveDateTime.to_date()
+    |> Date.add(days_to_return(checkout_datetime))
+  end
+
+  defp days_to_return(checkout_date) do
+    if before_noon?(checkout_date) do
+      @days_before_limit
+    else
+      @days_after_limit
+    end
+  end
+
+  def days_late(planned_return_date, actual_return_datetime) do
+    return_date = NaiveDateTime.to_date(actual_return_datetime)
+
+    case Date.diff(return_date, planned_return_date) do
+      days_late when days_late > 0 -> days_late
+      _ -> 0
+    end
+  end
+
+  def monday?(datetime) do
+    date = NaiveDateTime.to_date(datetime)
+    Date.day_of_week(date) == 1
+  end
+
+  def calculate_late_fee(checkout, return, rate) do
+    checkout_datetime = datetime_from_string(checkout)
+    planned_return_date = return_date(checkout_datetime)
+    return_datetime = datetime_from_string(return)
+    days_late = days_late(planned_return_date, return_datetime)
+    charge = days_late * rate
+    maybe_apply_discount(charge, return_datetime)
+  end
+
+  defp maybe_apply_discount(charge, datetime) do
+    if monday?(datetime), do: trunc(charge * 0.5), else: charge
+  end
+end
+```
+
+```elixir
+LibraryFees.return_date(~N[2020-02-14 11:59:59Z])
+```
